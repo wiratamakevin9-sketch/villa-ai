@@ -61,3 +61,10 @@ test("buildRows: menandai baris bermasalah dan melewati baris kosong", () => {
   assert.equal(rows[0].channel_name, "Airbnb");
   assert.ok(rows[1].problems.length >= 2);
 });
+
+import { toCsv } from "../lib/csv.ts";
+
+test("toCsv: escape koma, kutip, baris baru, dan formula", () => {
+  const csv = toCsv([{ a: "Villa, Ubud", b: 'kata "x"', c: "baris\nbaru", d: "=SUM(A1)", e: -5, f: null }]);
+  assert.equal(csv, 'a,b,c,d,e,f\r\n"Villa, Ubud","kata ""x""","baris\nbaru",\'=SUM(A1),-5,\r\n');
+});

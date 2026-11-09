@@ -31,17 +31,20 @@ export function BookingForm({
   channels,
   booking,
   defaultPropertyId,
+  defaults = {},
 }: {
   action: (formData: FormData) => Promise<void>;
   properties: PropertyLite[];
   channels: Channel[];
   booking?: BookingRecord;
   defaultPropertyId?: string;
+  defaults?: { check_in?: string; check_out?: string; channel_id?: string; ical_event_id?: string };
 }) {
   const b = booking;
   return (
     <form action={action} className="grid gap-4 sm:grid-cols-2">
       <input type="hidden" name="guest_id" value={b?.guest_id ?? ""} />
+      {defaults.ical_event_id && <input type="hidden" name="ical_event_id" value={defaults.ical_event_id} />}
       <div>
         <label className="label" htmlFor="property_id">Villa *</label>
         <select className="input" id="property_id" name="property_id" required
@@ -52,7 +55,7 @@ export function BookingForm({
       </div>
       <div>
         <label className="label" htmlFor="channel_id">Channel</label>
-        <select className="input" id="channel_id" name="channel_id" defaultValue={b?.channel_id ?? ""}>
+        <select className="input" id="channel_id" name="channel_id" defaultValue={b?.channel_id ?? defaults.channel_id ?? ""}>
           <option value="">— Tidak diketahui —</option>
           {channels.filter((c) => c.active || c.id === b?.channel_id).map((c) => (
             <option key={c.id} value={c.id}>{c.name} ({c.commission_pct}%)</option>
@@ -79,11 +82,11 @@ export function BookingForm({
 
       <div>
         <label className="label" htmlFor="check_in">Check-in *</label>
-        <input className="input" id="check_in" name="check_in" type="date" required defaultValue={b?.check_in} />
+        <input className="input" id="check_in" name="check_in" type="date" required defaultValue={b?.check_in ?? defaults.check_in} />
       </div>
       <div>
         <label className="label" htmlFor="check_out">Check-out *</label>
-        <input className="input" id="check_out" name="check_out" type="date" required defaultValue={b?.check_out} />
+        <input className="input" id="check_out" name="check_out" type="date" required defaultValue={b?.check_out ?? defaults.check_out} />
       </div>
 
       <div>

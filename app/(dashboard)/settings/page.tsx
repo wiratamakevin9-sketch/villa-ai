@@ -1,5 +1,6 @@
 import { getCurrentOrg } from "@/lib/org";
 import { addChannel, clearDemo, loadDemo, updateChannel } from "./actions";
+import { IntegrationsSection } from "./integrations-section";
 
 export default async function SettingsPage({
   searchParams,
@@ -61,6 +62,8 @@ export default async function SettingsPage({
         )}
         <p className="mt-3 text-xs text-stone-400">Komisi % dipakai untuk menghitung komisi otomatis saat booking baru dicatat. Booking lama tidak berubah.</p>
       </div>
+
+      {role === "owner" && <IntegrationsSection supabase={supabase} orgId={org.id} />}
 
       {role === "owner" && (
         <div className="card">

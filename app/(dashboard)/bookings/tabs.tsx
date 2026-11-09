@@ -1,9 +1,10 @@
 import Link from "next/link";
 
-export function BookingTabs({ active }: { active: "list" | "calendar" | "import" }) {
+export function BookingTabs({ active }: { active: "list" | "calendar" | "import" | "inbox" }) {
   const tabs = [
     { key: "list", href: "/bookings", label: "Daftar" },
     { key: "calendar", href: "/bookings/calendar", label: "Kalender" },
+    { key: "inbox", href: "/bookings/inbox", label: "Dari OTA" },
     { key: "import", href: "/bookings/import", label: "Impor CSV" },
   ];
   return (

@@ -59,13 +59,21 @@ export async function saveBooking(bookingId: string | null, formData: FormData) 
     notes: String(formData.get("notes") || "").trim() || null,
   };
 
-  const { error } = bookingId
-    ? await supabase.from("bookings").update(booking).eq("id", bookingId)
-    : await supabase.from("bookings").insert(booking);
+  const { data: saved, error } = bookingId
+    ? await supabase.from("bookings").update(booking).eq("id", bookingId).select("id").single()
+    : await supabase.from("bookings").insert(booking).select("id").single();
   if (error) {
     // jangan tinggalkan data tamu "yatim" jika booking gagal disimpan
     if (isNewGuest && guestId) await supabase.from("guests").delete().eq("id", guestId);
     fail(friendlyError(error));
+  }
+
+  // Booking dicatat dari kalender OTA → hubungkan supaya tidak muncul lagi di "Dari OTA"
+  const icalEventId = String(formData.get("ical_event_id") || "");
+  if (icalEventId && saved) {
+    await supabase.from("ical_events").update({ booking_id: saved.id }).eq("id", icalEventId);
+    await supabase.from("alerts").update({ status: "resolved", resolved_at: new Date().toISOString() })
+      .eq("type", "ical_unrecorded").eq("data->>event_id", icalEventId);
   }
 
   revalidatePath("/", "layout");

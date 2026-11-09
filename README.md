@@ -7,7 +7,7 @@ booking, operasional, dan laporan keuangan untuk banyak properti sekaligus.
 
 ## Mulai
 
-Panduan per fase: [Fase 0](docs/PANDUAN-FASE-0.md) · [Fase 1](docs/PANDUAN-FASE-1.md) · [Fase 2: Asisten AI](docs/PANDUAN-FASE-2.md) · [Fase 3: Proaktif](docs/PANDUAN-FASE-3.md)
+Panduan per fase: [Fase 0](docs/PANDUAN-FASE-0.md) · [Fase 1](docs/PANDUAN-FASE-1.md) · [Fase 2: Asisten AI](docs/PANDUAN-FASE-2.md) · [Fase 3: Proaktif](docs/PANDUAN-FASE-3.md) · [Fase 4: Integrasi](docs/PANDUAN-FASE-4.md)
 
 Ringkasnya:
 
@@ -26,6 +26,8 @@ app/
   (dashboard)/        Ringkasan, Asisten AI, Alert, Persetujuan, Laporan, Booking,
                       Kalender, Keuangan, Operasional, Villa, Pengaturan
   api/agent/          Endpoint streaming Asisten AI
+  api/export/         Unduh CSV (login)
+  api/feed/           Feed CSV Google Sheets (token rahasia)
   login/ onboarding/  Login, daftar, buat bisnis
 lib/
   supabase/           Koneksi database (server + middleware)
