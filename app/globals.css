@@ -23,3 +23,18 @@ body {
   .btn { @apply inline-flex items-center justify-center rounded-lg bg-emerald-700 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-800 disabled:opacity-50; }
   .btn-secondary { @apply inline-flex items-center justify-center rounded-lg border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50; }
 }
+
+/* Format jawaban asisten AI (markdown) */
+.chat-md > * + * { margin-top: 0.6rem; }
+.chat-md h1, .chat-md h2, .chat-md h3 { font-weight: 600; margin-top: 1rem; }
+.chat-md h1 { font-size: 1.1rem; } .chat-md h2 { font-size: 1.05rem; } .chat-md h3 { font-size: 1rem; }
+.chat-md ul { list-style: disc; padding-left: 1.25rem; }
+.chat-md ol { list-style: decimal; padding-left: 1.25rem; }
+.chat-md li + li { margin-top: 0.25rem; }
+.chat-md strong { font-weight: 600; }
+.chat-md a { color: #047857; text-decoration: underline; }
+.chat-md code { background: #f5f5f4; border-radius: 4px; padding: 0 4px; font-size: 0.85em; }
+.chat-md table { display: block; overflow-x: auto; border-collapse: collapse; font-size: 0.85rem; }
+.chat-md th, .chat-md td { border-bottom: 1px solid #e7e5e4; padding: 0.35rem 0.6rem; text-align: left; white-space: nowrap; }
+.chat-md th { color: #57534e; font-weight: 600; }
+.chat-md blockquote { border-left: 3px solid #d6d3d1; padding-left: 0.75rem; color: #57534e; }

@@ -3,6 +3,7 @@ import { getCurrentOrg } from "@/lib/org";
 
 const NAV = [
   { href: "/", label: "Ringkasan" },
+  { href: "/assistant", label: "✦ Asisten AI" },
   { href: "/bookings", label: "Booking" },
   { href: "/bookings/calendar", label: "Kalender" },
   { href: "/finance", label: "Keuangan" },
@@ -10,7 +11,7 @@ const NAV = [
   { href: "/settings", label: "Pengaturan" },
 ];
 
-// Menu berikutnya (Fase 2+): Asisten AI, Operasional, Laporan
+// Menu berikutnya (Fase 3+): Alert, Laporan otomatis, Operasional
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { org, user, role } = await getCurrentOrg();
