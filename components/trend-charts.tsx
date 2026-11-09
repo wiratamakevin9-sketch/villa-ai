@@ -35,9 +35,10 @@ export function TrendCharts({ data }: { data: TrendPoint[] }) {
                 formatter={(v: number, name: string) => [rupiah(v), name]}
                 contentStyle={{ borderRadius: 8, borderColor: GRID, fontSize: 13 }}
               />
-              <Legend iconType="square" wrapperStyle={{ fontSize: 13, color: INK }} />
-              <Bar dataKey="revenue" name="Pendapatan kamar" fill={BLUE} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="profit" name="Laba bersih" fill={ORANGE} radius={[4, 4, 0, 0]} />
+              <Legend iconType="square" wrapperStyle={{ fontSize: 13 }}
+                formatter={(value) => <span style={{ color: INK }}>{value}</span>} />
+              <Bar dataKey="revenue" name="Pendapatan kamar" fill={BLUE} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+              <Bar dataKey="profit" name="Laba bersih" fill={ORANGE} radius={[4, 4, 0, 0]} isAnimationActive={false} />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -57,7 +58,7 @@ export function TrendCharts({ data }: { data: TrendPoint[] }) {
                 contentStyle={{ borderRadius: 8, borderColor: GRID, fontSize: 13 }}
               />
               <Line type="monotone" dataKey="occupancy" name="Okupansi" stroke={BLUE} strokeWidth={2}
-                dot={{ r: 4, fill: BLUE, stroke: "#fff", strokeWidth: 2 }} activeDot={{ r: 6 }} connectNulls />
+                dot={{ r: 4, fill: BLUE, stroke: "#fff", strokeWidth: 2 }} activeDot={{ r: 6 }} connectNulls isAnimationActive={false} />
             </LineChart>
           </ResponsiveContainer>
         </div>

@@ -11,10 +11,10 @@ Perkiraan waktu: 1–2 jam jika mengikuti langkah di bawah.
 
 | Bagian | Isi | Lokasi |
 |---|---|---|
-| Skema database | 25 tabel: organisasi, villa, channel, tamu, booking, harga, musim, kompetitor, keuangan, anggaran, staf, tugas, aset, alert, persetujuan, laporan, dokumen, percakapan AI, audit log | `supabase/migrations/…001_core_schema.sql` |
-| Keamanan | Row Level Security: setiap user hanya bisa melihat data bisnisnya; role owner / manager / staff | `…002_security_rls.sql` |
-| View analitik | Okupansi, ADR, RevPAR, laba per villa per bulan; performa channel; deteksi pengeluaran tidak wajar; okupansi 30/60/90 hari ke depan | `…003_analytics_views.sql` |
-| Data contoh | 3 villa fiktif (Ubud, Canggu, Uluwatu) + ±6 bulan booking & pengeluaran, bisa dihapus 1 klik | `…004_demo_data.sql` |
+| Skema database | 25 tabel: organisasi, villa, channel, tamu, booking, harga, musim, kompetitor, keuangan, anggaran, staf, tugas, aset, alert, persetujuan, laporan, dokumen, percakapan AI, audit log | `supabase/migrations/…_core_schema.sql` |
+| Keamanan | Row Level Security: setiap user hanya bisa melihat data bisnisnya; role owner / manager / staff | `…_security_rls.sql` |
+| View analitik | Okupansi, ADR, RevPAR, laba per villa per bulan; performa channel; deteksi pengeluaran tidak wajar; okupansi 30/60/90 hari ke depan | `…_analytics_views.sql` |
+| Data contoh | 3 villa fiktif (Ubud, Canggu, Uluwatu) + ±6 bulan booking & pengeluaran, bisa dihapus 1 klik | `…_demo_data.sql` |
 | Aplikasi web | Login/daftar, onboarding, Ringkasan (KPI), Villa (daftar + tambah), Pengaturan | `app/` |
 
 ### Fitur penting di database
@@ -49,9 +49,9 @@ Pilih **salah satu** cara.
 ### Cara A (paling mudah): SQL Editor
 
 1. Di Supabase buka **SQL Editor** → **New query**.
-2. Buka file `supabase/migrations/20261108000001_core_schema.sql`, salin semua isinya,
+2. Buka file `supabase/migrations/20261108181253_core_schema.sql`, salin semua isinya,
    tempel, lalu klik **Run**.
-3. Ulangi untuk file `…002`, `…003`, `…004` **sesuai urutan**.
+3. Ulangi untuk file berikutnya **sesuai urutan nama file**.
 
 ### Cara B: Supabase CLI (disarankan untuk jangka panjang)
 

@@ -9,7 +9,12 @@ export async function login(formData: FormData) {
     email: String(formData.get("email")),
     password: String(formData.get("password")),
   });
-  if (error) redirect(`/login?error=${encodeURIComponent("Email atau password salah")}`);
+  if (error) {
+    const msg = error.code === "invalid_credentials"
+      ? "Email atau password salah"
+      : `Gagal masuk: ${error.message}`;
+    redirect(`/login?error=${encodeURIComponent(msg)}`);
+  }
   redirect("/");
 }
 

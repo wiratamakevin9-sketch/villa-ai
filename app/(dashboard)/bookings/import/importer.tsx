@@ -98,7 +98,7 @@ export function Importer({ properties, channels }: { properties: PropertyLite[];
           <label className="btn-secondary cursor-pointer">
             Pilih file CSV
             <input type="file" accept=".csv,text/csv" className="sr-only"
-              onChange={(e) => e.target.files?.[0] && onFile(e.target.files[0])} />
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) onFile(f); e.target.value = ""; }} />
           </label>
           <span className="text-sm text-stone-500">{fileName || "Belum ada file"}</span>
           <a href="/template-booking.csv" download className="text-sm text-emerald-700 underline">Unduh template CSV</a>
