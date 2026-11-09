@@ -1,13 +1,16 @@
 import { getCurrentOrg } from "@/lib/org";
 import { formatIDR } from "@/lib/format";
 import { addProperty } from "./actions";
+import { PropertyFields } from "./property-fields";
+import { Flash } from "@/components/flash";
+import Link from "next/link";
 
 export default async function PropertiesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; message?: string }>;
 }) {
-  const { error } = await searchParams;
+  const { error, message } = await searchParams;
   const { supabase, role } = await getCurrentOrg();
   const { data: properties } = await supabase
     .from("properties")
@@ -19,6 +22,7 @@ export default async function PropertiesPage({
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-semibold">Villa</h1>
+      <Flash message={message} />
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {(properties ?? []).map((p) => (
@@ -40,6 +44,12 @@ export default async function PropertiesPage({
               <div><dt className="text-stone-400">Maks tamu</dt><dd>{p.max_guests ?? "—"}</dd></div>
               <div><dt className="text-stone-400">Harga dasar</dt><dd>{formatIDR(p.base_rate, true)}</dd></div>
             </dl>
+            <div className="mt-4 flex gap-3 text-sm">
+              <Link href={`/bookings?property=${p.id}`} className="text-emerald-700 underline">Booking</Link>
+              <Link href={`/finance?property=${p.id}`} className="text-emerald-700 underline">Keuangan</Link>
+              {canEdit && <Link href={`/properties/${p.id}`} className="text-emerald-700 underline">Edit</Link>}
+            </div>
+            {p.status === "inactive" && <p className="mt-2 text-xs text-stone-400">Tidak aktif</p>}
           </div>
         ))}
       </div>
@@ -49,42 +59,7 @@ export default async function PropertiesPage({
           <h2 className="mb-4 font-semibold">Tambah villa</h2>
           {error && <p className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">{error}</p>}
           <form action={addProperty} className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <label className="label" htmlFor="name">Nama villa *</label>
-              <input className="input" id="name" name="name" required />
-            </div>
-            <div>
-              <label className="label" htmlFor="code">Kode singkat</label>
-              <input className="input" id="code" name="code" placeholder="mis. VSI" maxLength={6} />
-            </div>
-            <div>
-              <label className="label" htmlFor="location">Lokasi</label>
-              <input className="input" id="location" name="location" placeholder="mis. Canggu, Badung" />
-            </div>
-            <div>
-              <label className="label" htmlFor="bedrooms">Jumlah kamar tidur</label>
-              <input className="input" id="bedrooms" name="bedrooms" type="number" min={0} />
-            </div>
-            <div>
-              <label className="label" htmlFor="bathrooms">Jumlah kamar mandi</label>
-              <input className="input" id="bathrooms" name="bathrooms" type="number" min={0} />
-            </div>
-            <div>
-              <label className="label" htmlFor="max_guests">Maksimal tamu</label>
-              <input className="input" id="max_guests" name="max_guests" type="number" min={1} />
-            </div>
-            <div>
-              <label className="label" htmlFor="base_rate">Harga dasar per malam (Rp)</label>
-              <input className="input" id="base_rate" name="base_rate" inputMode="numeric" placeholder="2500000" />
-            </div>
-            <div>
-              <label className="label" htmlFor="purchase_price">Nilai investasi (Rp)</label>
-              <input className="input" id="purchase_price" name="purchase_price" inputMode="numeric" placeholder="untuk hitung ROI" />
-            </div>
-            <div>
-              <label className="label" htmlFor="opening_date">Mulai beroperasi</label>
-              <input className="input" id="opening_date" name="opening_date" type="date" />
-            </div>
+            <PropertyFields />
             <div className="sm:col-span-2">
               <button className="btn">Simpan villa</button>
             </div>

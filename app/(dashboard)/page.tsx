@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentOrg } from "@/lib/org";
 import { formatIDR, formatMonth, formatPct } from "@/lib/format";
+import { TrendCharts, type TrendPoint } from "@/components/trend-charts";
 
 type KpiRow = {
   property_id: string;
@@ -52,10 +53,13 @@ export default async function OverviewPage({
   const thisMonth = monthStart(0);
   const lastMonth = monthStart(-1);
 
-  const [{ data: kpi }, { data: forward }, { data: shared }] = await Promise.all([
+  const firstTrendMonth = monthStart(-11);
+  const [{ data: kpi }, { data: forward }, { data: shared }, { data: trendRows }, { data: trendShared }] = await Promise.all([
     supabase.from("v_monthly_kpi").select("*").in("month", [thisMonth, lastMonth]).order("property_name"),
     supabase.from("v_forward_occupancy").select("property_name, horizon_days, occupancy_pct").order("property_name"),
     supabase.from("v_monthly_shared_expenses").select("month, shared_expenses").in("month", [thisMonth, lastMonth]),
+    supabase.from("v_monthly_kpi").select("*").gte("month", firstTrendMonth).lte("month", thisMonth),
+    supabase.from("v_monthly_shared_expenses").select("month, shared_expenses").gte("month", firstTrendMonth).lte("month", thisMonth),
   ]);
 
   const rows = (kpi ?? []) as KpiRow[];
@@ -82,6 +86,23 @@ export default async function OverviewPage({
   const prev = totals(previous);
   const sharedFor = (m: string) => Number(shared?.find((s) => s.month === m)?.shared_expenses ?? 0);
   const sharedExpenses = sharedFor(thisMonth);
+
+  // Data tren 12 bulan (hanya bulan yang punya data villa)
+  const trend: TrendPoint[] = Array.from({ length: 12 }, (_, i) => monthStart(i - 11))
+    .map((m) => {
+      const r = ((trendRows ?? []) as KpiRow[]).filter((x) => x.month === m);
+      if (r.length === 0) return null;
+      const t = totals(r);
+      const sh = Number(trendShared?.find((x) => x.month === m)?.shared_expenses ?? 0);
+      return {
+        month: m,
+        label: new Date(m + "T00:00:00").toLocaleDateString("id-ID", { month: "short", year: "2-digit" }),
+        revenue: Math.round(t.revenue),
+        profit: Math.round(t.profit - sh),
+        occupancy: t.occupancy,
+      };
+    })
+    .filter((x): x is TrendPoint => x !== null);
 
   const cards = [
     { label: "Okupansi", value: formatPct(now.occupancy), prev: formatPct(prev.occupancy) },
@@ -110,6 +131,8 @@ export default async function OverviewPage({
           </div>
         ))}
       </div>
+
+      {trend.length > 1 && <TrendCharts data={trend} />}
 
       <div className="card overflow-x-auto">
         <h2 className="mb-3 font-semibold">Per villa — bulan ini</h2>
