@@ -1,24 +1,32 @@
 import Link from "next/link";
 import { getCurrentOrg } from "@/lib/org";
 
-const NAV = [
+const NAV: { href: string; label: string; badge?: "alerts" | "approvals" }[] = [
   { href: "/", label: "Ringkasan" },
   { href: "/assistant", label: "✦ Asisten AI" },
+  { href: "/alerts", label: "Alert", badge: "alerts" },
+  { href: "/approvals", label: "Persetujuan", badge: "approvals" },
+  { href: "/reports", label: "Laporan" },
   { href: "/bookings", label: "Booking" },
   { href: "/bookings/calendar", label: "Kalender" },
   { href: "/finance", label: "Keuangan" },
+  { href: "/tasks", label: "Operasional" },
   { href: "/properties", label: "Villa" },
   { href: "/settings", label: "Pengaturan" },
 ];
 
-// Menu berikutnya (Fase 3+): Alert, Laporan otomatis, Operasional
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { org, user, role } = await getCurrentOrg();
+  const { supabase, org, user, role } = await getCurrentOrg();
+  const [{ count: openAlerts }, { count: pendingApprovals }] = await Promise.all([
+    supabase.from("alerts").select("id", { count: "exact", head: true }).eq("status", "open").in("severity", ["warning", "critical"]),
+    supabase.from("approvals").select("id", { count: "exact", head: true }).eq("status", "pending"),
+  ]);
+  const badges = { alerts: openAlerts ?? 0, approvals: pendingApprovals ?? 0 };
 
   return (
     <div className="min-h-screen md:flex">
-      <aside className="border-b border-stone-200 bg-white md:min-h-screen md:w-60 md:border-b-0 md:border-r">
+      <aside className="print:hidden border-b border-stone-200 bg-white md:min-h-screen md:w-60 md:border-b-0 md:border-r">
         <div className="p-4">
           <p className="text-xs uppercase tracking-wide text-stone-400">Villa AI</p>
           <p className="truncate font-semibold">{org.name}</p>
@@ -31,6 +39,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
               className="whitespace-nowrap rounded-lg px-3 py-2 text-sm text-stone-700 hover:bg-stone-100"
             >
               {item.label}
+              {item.badge && badges[item.badge] > 0 && (
+                <span className="ml-1.5 rounded-full bg-stone-800 px-1.5 py-0.5 text-xs text-white" aria-label={`${badges[item.badge]} menunggu`}>
+                  {badges[item.badge]}
+                </span>
+              )}
             </Link>
           ))}
         </nav>

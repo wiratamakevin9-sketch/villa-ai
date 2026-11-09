@@ -12,6 +12,7 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import { proposeAction } from "@/lib/approvals";
 
 type Json = Record<string, unknown>;
 type Executor = (supabase: SupabaseClient, input: unknown) => Promise<Json>;
@@ -107,6 +108,49 @@ export const TOOL_DEFINITIONS: Anthropic.Beta.Messages.BetaToolUnion[] = [
   },
 ];
 
+// --- Fase 3: alert & usulan aksi (masuk antrean persetujuan, TIDAK langsung dijalankan) ---
+TOOL_DEFINITIONS.push(
+  {
+    name: "get_open_alerts",
+    description: "Daftar alert yang masih terbuka (okupansi rendah, pengeluaran tidak wajar, penurunan okupansi, rugi, celah booking, servis aset) beserta data pemicunya.",
+    input_schema: { type: "object", properties: {}, additionalProperties: false },
+  },
+  {
+    name: "propose_task",
+    description:
+      "USULKAN tugas operasional (maintenance, inspeksi, pembelian, cleaning) untuk sebuah villa. Tugas TIDAK langsung dibuat: masuk antrean persetujuan pemilik. Gunakan hanya jika pengguna meminta atau setuju dengan saranmu.",
+    input_schema: {
+      type: "object",
+      properties: {
+        property_id: { type: "string", description: "ID villa (dari get_portfolio_overview)" },
+        type: { type: "string", enum: ["cleaning", "maintenance", "inspection", "purchase", "other"] },
+        title: { type: "string", description: "Judul tugas yang jelas, mis. 'Servis pompa kolam & cek tekanan air'" },
+        due_date: { type: "string", description: "Opsional, YYYY-MM-DD" },
+        priority: { type: "string", enum: ["low", "normal", "high", "urgent"] },
+        notes: { type: "string", description: "Opsional: detail pekerjaan" },
+        reason: { type: "string", description: "Alasan berbasis data, ditampilkan ke pemilik saat menyetujui" },
+      },
+      required: ["property_id", "type", "title", "reason"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "propose_base_rate_change",
+    description:
+      "USULKAN perubahan harga dasar per malam sebuah villa (Rupiah). TIDAK langsung diubah: masuk antrean persetujuan pemilik. Sertakan alasan berbasis data (okupansi, ADR, kompetitor, musim).",
+    input_schema: {
+      type: "object",
+      properties: {
+        property_id: { type: "string", description: "ID villa" },
+        new_rate: { type: "integer", description: "Harga dasar baru per malam dalam Rupiah, mis. 3500000" },
+        reason: { type: "string", description: "Alasan berbasis data" },
+      },
+      required: ["property_id", "new_rate", "reason"],
+      additionalProperties: false,
+    },
+  },
+);
+
 // Tool web search bawaan Claude (riset kompetitor, harga pasar, tren pariwisata)
 export const WEB_SEARCH_TOOL: Anthropic.Beta.Messages.BetaToolUnion = {
   type: "web_search_20260209",
@@ -126,6 +170,9 @@ export const TOOL_LABELS: Record<string, string> = {
   list_bookings: "Membaca daftar booking",
   get_roi: "Menghitung ROI",
   web_search: "Mencari di web",
+  get_open_alerts: "Membaca alert terbuka",
+  propose_task: "Mengusulkan tugas",
+  propose_base_rate_change: "Mengusulkan perubahan harga",
 };
 
 // ---------------------------------------------------------------------
@@ -338,6 +385,26 @@ const executors: Record<string, Executor> = {
         };
       }),
     };
+  },
+
+  async get_open_alerts(supabase) {
+    const { data, error } = await supabase.from("alerts")
+      .select("type, severity, title, data, created_at, properties(name)")
+      .eq("status", "open").order("created_at", { ascending: false }).limit(30);
+    fail(error);
+    return { count: data?.length ?? 0, alerts: data };
+  },
+
+  async propose_task(supabase, input) {
+    const { reason, ...payload } = z.object({ reason: z.string().min(3).max(1000) }).passthrough().parse(input) as { reason: string } & Json;
+    const r = await proposeAction(supabase, "create_task", payload, reason);
+    return { ...r, message: "Usulan masuk antrean persetujuan. Pemilik bisa menyetujui di menu Persetujuan." };
+  },
+
+  async propose_base_rate_change(supabase, input) {
+    const { reason, ...payload } = z.object({ reason: z.string().min(3).max(1000) }).passthrough().parse(input) as { reason: string } & Json;
+    const r = await proposeAction(supabase, "update_base_rate", payload, reason);
+    return { ...r, message: "Usulan masuk antrean persetujuan. Harga belum berubah sampai disetujui." };
   },
 };
 

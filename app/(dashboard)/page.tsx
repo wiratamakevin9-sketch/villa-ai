@@ -54,12 +54,14 @@ export default async function OverviewPage({
   const lastMonth = monthStart(-1);
 
   const firstTrendMonth = monthStart(-11);
-  const [{ data: kpi }, { data: forward }, { data: shared }, { data: trendRows }, { data: trendShared }] = await Promise.all([
+  const [{ data: kpi }, { data: forward }, { data: shared }, { data: trendRows }, { data: trendShared }, { data: topAlerts }] = await Promise.all([
     supabase.from("v_monthly_kpi").select("*").in("month", [thisMonth, lastMonth]).order("property_name"),
     supabase.from("v_forward_occupancy").select("property_name, horizon_days, occupancy_pct").order("property_name"),
     supabase.from("v_monthly_shared_expenses").select("month, shared_expenses").in("month", [thisMonth, lastMonth]),
     supabase.from("v_monthly_kpi").select("*").gte("month", firstTrendMonth).lte("month", thisMonth),
     supabase.from("v_monthly_shared_expenses").select("month, shared_expenses").gte("month", firstTrendMonth).lte("month", thisMonth),
+    supabase.from("alerts").select("id, severity, title").eq("status", "open").in("severity", ["critical", "warning"])
+      .order("severity").order("created_at", { ascending: false }).limit(3),
   ]);
 
   const rows = (kpi ?? []) as KpiRow[];
@@ -121,6 +123,20 @@ export default async function OverviewPage({
         <h1 className="text-2xl font-semibold">Ringkasan {formatMonth(thisMonth)}</h1>
         <p className="text-sm text-stone-500">Bulan berjalan, semua villa. Pembanding: bulan lalu.</p>
       </div>
+
+      {(topAlerts ?? []).length > 0 && (
+        <div className="card border-amber-200 bg-amber-50/40">
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <h2 className="font-semibold">Perlu perhatian</h2>
+            <Link href="/alerts" className="text-sm text-emerald-700 underline">Semua alert</Link>
+          </div>
+          <ul className="space-y-1 text-sm">
+            {(topAlerts ?? []).map((a) => (
+              <li key={a.id}>{a.severity === "critical" ? "⛔ Kritis" : "⚠️ Perhatian"} · {a.title}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {cards.map((c) => (
