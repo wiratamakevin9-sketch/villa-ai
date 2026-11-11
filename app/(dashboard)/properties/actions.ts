@@ -16,6 +16,8 @@ function readFields(formData: FormData) {
     max_guests: parseRupiah(formData.get("max_guests")),
     base_rate: parseRupiah(formData.get("base_rate")),
     purchase_price: parseRupiah(formData.get("purchase_price")),
+    min_rate: parseRupiah(formData.get("min_rate")),
+    max_rate: parseRupiah(formData.get("max_rate")),
     opening_date: text("opening_date"),
   };
 }

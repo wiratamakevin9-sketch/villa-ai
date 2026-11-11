@@ -19,19 +19,49 @@ export const UpdateBaseRatePayload = z.object({
   new_rate: z.number().int().min(100_000).max(500_000_000),
 }).strict();
 
+export const SetRateRangePayload = z.object({
+  property_id: z.string().uuid(),
+  date_from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  date_to: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),   // inklusif
+  rate: z.number().int().min(100_000).max(500_000_000),
+  min_stay: z.number().int().min(1).max(30).optional(),
+}).strict().refine((p) => p.date_to >= p.date_from, "date_to harus >= date_from")
+  .refine((p) => (Date.parse(p.date_to) - Date.parse(p.date_from)) / 86_400_000 <= 120, "Maksimal 120 hari");
+
 export const ACTION_LABELS: Record<string, string> = {
   create_task: "Buat tugas",
   update_base_rate: "Ubah harga dasar",
+  set_rate_range: "Atur harga tanggal",
 };
+
+/** Simpan harga khusus untuk setiap tanggal dalam rentang (inklusif). */
+export async function applyRateRange(
+  supabase: SupabaseClient,
+  p: { property_id: string; date_from: string; date_to: string; rate: number; min_stay?: number },
+  reason: string | null, userId: string, approvalId: string | null = null,
+) {
+  const rows: { property_id: string; date: string; rate: number; min_stay: number }[] = [];
+  for (let t = Date.parse(p.date_from + "T00:00:00Z"); t <= Date.parse(p.date_to + "T00:00:00Z"); t += 86_400_000) {
+    rows.push({ property_id: p.property_id, date: new Date(t).toISOString().slice(0, 10), rate: p.rate, min_stay: p.min_stay ?? 1 });
+  }
+  const { error } = await supabase.from("rate_calendar").upsert(rows, { onConflict: "property_id,date" });
+  if (error) throw new Error(error.message);
+  await supabase.from("rate_change_log").insert({
+    property_id: p.property_id, date_from: p.date_from, date_to: p.date_to, new_rate: p.rate,
+    reason, approval_id: approvalId, changed_by: userId,
+  });
+}
 
 /** Simpan usulan ke antrean (status pending). */
 export async function proposeAction(
   supabase: SupabaseClient,
-  action: "create_task" | "update_base_rate",
+  action: "create_task" | "update_base_rate" | "set_rate_range",
   payload: unknown,
   reason: string,
 ) {
-  const parsed = action === "create_task" ? CreateTaskPayload.parse(payload) : UpdateBaseRatePayload.parse(payload);
+  const parsed = action === "create_task" ? CreateTaskPayload.parse(payload)
+    : action === "set_rate_range" ? SetRateRangePayload.parse(payload)
+    : UpdateBaseRatePayload.parse(payload);
   const { data: prop, error: pErr } = await supabase
     .from("properties").select("org_id, name, base_rate").eq("id", parsed.property_id).single();
   if (pErr || !prop) throw new Error("Villa tidak ditemukan");
@@ -63,6 +93,9 @@ export async function executeApproval(supabase: SupabaseClient, approval: { id: 
       property_id: p.property_id, date_from: today, date_to: today, old_rate: prop?.base_rate ?? null,
       new_rate: p.new_rate, reason: approval.reason, approval_id: approval.id, changed_by: userId,
     });
+  } else if (approval.action_type === "set_rate_range") {
+    const p = SetRateRangePayload.parse(stripMeta(approval.payload));
+    await applyRateRange(supabase, p, approval.reason, userId, approval.id);
   } else {
     throw new Error(`Jenis aksi tidak dikenal: ${approval.action_type}`);
   }

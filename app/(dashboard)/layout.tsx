@@ -9,6 +9,7 @@ const NAV: { href: string; label: string; badge?: "alerts" | "approvals" }[] = [
   { href: "/reports", label: "Laporan" },
   { href: "/bookings", label: "Booking" },
   { href: "/bookings/calendar", label: "Kalender" },
+  { href: "/pricing", label: "Harga" },
   { href: "/finance", label: "Keuangan" },
   { href: "/tasks", label: "Operasional" },
   { href: "/properties", label: "Villa" },

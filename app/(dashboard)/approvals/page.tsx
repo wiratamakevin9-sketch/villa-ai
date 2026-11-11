@@ -25,6 +25,14 @@ function Detail({ a }: { a: Approval }) {
       </p>
     );
   }
+  if (a.action_type === "set_rate_range") {
+    return (
+      <p className="text-sm">
+        <b>{p.property_name}</b>: harga <b>{formatIDR(Number(p.rate))}</b>/malam untuk {p.date_from} s/d {p.date_to}
+        {p.min_stay ? ` · min. ${p.min_stay} malam` : ""}
+      </p>
+    );
+  }
   return (
     <div className="text-sm">
       <p><b>{p.property_name}</b>: {p.title}</p>
@@ -74,7 +82,7 @@ export default async function ApprovalsPage({ searchParams }: { searchParams: Pr
           <ul className="divide-y divide-stone-100 text-sm">
             {decided.map((a) => (
               <li key={a.id} className="flex flex-wrap items-center justify-between gap-2 py-2">
-                <span>{ACTION_LABELS[a.action_type]}: {a.payload.property_name} — {a.action_type === "update_base_rate" ? formatIDR(Number(a.payload.new_rate)) : a.payload.title}</span>
+                <span>{ACTION_LABELS[a.action_type]}: {a.payload.property_name} — {a.action_type === "update_base_rate" ? formatIDR(Number(a.payload.new_rate)) : a.action_type === "set_rate_range" ? `${formatIDR(Number(a.payload.rate))} (${a.payload.date_from}–${a.payload.date_to})` : a.payload.title}</span>
                 <span className="text-stone-500">{STATUS[a.status] ?? a.status}</span>
               </li>
             ))}

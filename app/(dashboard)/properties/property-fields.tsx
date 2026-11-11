@@ -2,6 +2,7 @@ export type PropertyRecord = {
   id?: string; name?: string; code?: string | null; location?: string | null; bedrooms?: number | null;
   bathrooms?: number | null; max_guests?: number | null; base_rate?: number | null;
   purchase_price?: number | null; opening_date?: string | null; status?: string;
+  min_rate?: number | null; max_rate?: number | null;
 };
 
 const money = (v?: number | null) => (v == null ? "" : Math.round(Number(v)));
@@ -36,6 +37,14 @@ export function PropertyFields({ p = {}, showStatus = false }: { p?: PropertyRec
       <div>
         <label className="label" htmlFor="base_rate">Harga dasar per malam (Rp)</label>
         <input className="input" id="base_rate" name="base_rate" inputMode="numeric" placeholder="2500000" defaultValue={money(p.base_rate)} />
+      </div>
+      <div>
+        <label className="label" htmlFor="min_rate">Harga minimum per malam (Rp)</label>
+        <input className="input" id="min_rate" name="min_rate" inputMode="numeric" placeholder="default 60% harga dasar" defaultValue={money(p.min_rate)} />
+      </div>
+      <div>
+        <label className="label" htmlFor="max_rate">Harga maksimum per malam (Rp)</label>
+        <input className="input" id="max_rate" name="max_rate" inputMode="numeric" placeholder="default 200% harga dasar" defaultValue={money(p.max_rate)} />
       </div>
       <div>
         <label className="label" htmlFor="purchase_price">Nilai investasi (Rp)</label>

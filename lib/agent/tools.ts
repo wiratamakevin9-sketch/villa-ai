@@ -151,6 +151,56 @@ TOOL_DEFINITIONS.push(
   },
 );
 
+// --- Fase 5: harga & pasar ---
+TOOL_DEFINITIONS.push(
+  {
+    name: "get_rate_calendar",
+    description:
+      "Kalender harga per tanggal untuk satu villa (maks 62 hari): harga efektif saat ini (harga khusus atau harga dasar × musim), musim, min-stay, sudah dipesan atau belum, serta harga REKOMENDASI sistem dan faktor penyebabnya (akhir pekan, permintaan sekitar, last-minute, okupansi historis, median kompetitor).",
+    input_schema: {
+      type: "object",
+      properties: {
+        property_id: { type: "string", description: "ID villa" },
+        from_date: { type: "string", description: "YYYY-MM-DD" },
+        to_date: { type: "string", description: "YYYY-MM-DD (inklusif)" },
+      },
+      required: ["property_id", "from_date", "to_date"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "get_competitor_rates",
+    description: "Harga kompetitor yang tersimpan (input manual atau hasil riset AI) untuk rentang tanggal, beserta median per tanggal.",
+    input_schema: {
+      type: "object",
+      properties: {
+        from_date: { type: "string", description: "YYYY-MM-DD" },
+        to_date: { type: "string", description: "YYYY-MM-DD (inklusif)" },
+      },
+      required: ["from_date", "to_date"],
+      additionalProperties: false,
+    },
+  },
+  {
+    name: "propose_rate_range",
+    description:
+      "USULKAN harga khusus per malam untuk rentang tanggal (mis. promo musim sepi atau harga event). TIDAK langsung diterapkan: masuk antrean persetujuan. Sertakan alasan berbasis data.",
+    input_schema: {
+      type: "object",
+      properties: {
+        property_id: { type: "string", description: "ID villa" },
+        date_from: { type: "string", description: "YYYY-MM-DD" },
+        date_to: { type: "string", description: "YYYY-MM-DD (inklusif, maks 120 hari)" },
+        rate: { type: "integer", description: "Harga per malam (Rupiah)" },
+        min_stay: { type: "integer", description: "Opsional: minimal malam" },
+        reason: { type: "string", description: "Alasan berbasis data" },
+      },
+      required: ["property_id", "date_from", "date_to", "rate", "reason"],
+      additionalProperties: false,
+    },
+  },
+);
+
 // Tool web search bawaan Claude (riset kompetitor, harga pasar, tren pariwisata)
 export const WEB_SEARCH_TOOL: Anthropic.Beta.Messages.BetaToolUnion = {
   type: "web_search_20260209",
@@ -173,6 +223,9 @@ export const TOOL_LABELS: Record<string, string> = {
   get_open_alerts: "Membaca alert terbuka",
   propose_task: "Mengusulkan tugas",
   propose_base_rate_change: "Mengusulkan perubahan harga",
+  get_rate_calendar: "Membaca kalender harga",
+  get_competitor_rates: "Membaca harga kompetitor",
+  propose_rate_range: "Mengusulkan harga per tanggal",
 };
 
 // ---------------------------------------------------------------------
@@ -399,6 +452,50 @@ const executors: Record<string, Executor> = {
     const { reason, ...payload } = z.object({ reason: z.string().min(3).max(1000) }).passthrough().parse(input) as { reason: string } & Json;
     const r = await proposeAction(supabase, "create_task", payload, reason);
     return { ...r, message: "Usulan masuk antrean persetujuan. Pemilik bisa menyetujui di menu Persetujuan." };
+  },
+
+  async get_rate_calendar(supabase, input) {
+    const a = z.object({ property_id: uuid, from_date: date, to_date: date }).strict().parse(input);
+    if ((Date.parse(a.to_date) - Date.parse(a.from_date)) / 86_400_000 > 62) throw new Error("Maksimal 62 hari per permintaan");
+    const { data, error } = await supabase.rpc("rate_calendar_view", { p_property: a.property_id, p_from: a.from_date, p_to: a.to_date });
+    fail(error);
+    type R = { date: string; season_name: string | null; effective_rate: number; override_rate: number | null; min_stay: number; is_blocked: boolean; is_booked: boolean; recommended_rate: number | null; change_pct: number | null; factors: Json | null };
+    return {
+      note: "recommended_rate hanya dihitung untuk tanggal yang belum dipesan (90 hari ke depan). Harga OTA harus diubah manual di masing-masing OTA.",
+      days: ((data ?? []) as R[]).map((r) => ({
+        date: r.date, season: r.season_name, rate: num(r.effective_rate), custom_rate: r.override_rate !== null,
+        min_stay: r.min_stay, blocked: r.is_blocked || undefined, booked: r.is_booked,
+        recommended: r.recommended_rate === null ? undefined : num(r.recommended_rate),
+        change_pct: r.change_pct === null ? undefined : num(r.change_pct), factors: r.factors ?? undefined,
+      })),
+    };
+  },
+
+  async get_competitor_rates(supabase, input) {
+    const a = z.object({ from_date: date, to_date: date }).strict().parse(input);
+    const { data, error } = await supabase.from("competitor_rates")
+      .select("date, rate, source, captured_at, competitors(name, location, bedrooms)")
+      .gte("date", a.from_date).lte("date", a.to_date).order("date").limit(400);
+    fail(error);
+    type C = { date: string; rate: number; source: string | null; captured_at: string; competitors: { name: string; location: string | null; bedrooms: number | null } | null };
+    const rows = (data ?? []) as unknown as C[];
+    const byDate = new Map<string, number[]>();
+    rows.forEach((r) => byDate.set(r.date, [...(byDate.get(r.date) ?? []), num(r.rate)]));
+    const median = (xs: number[]) => { const s = [...xs].sort((x, y) => x - y); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+    return {
+      count: rows.length,
+      median_per_date: [...byDate.entries()].map(([d, xs]) => ({ date: d, median: round(median(xs)), n: xs.length })),
+      rates: rows.slice(0, 150).map((r) => ({
+        date: r.date, competitor: r.competitors?.name, location: r.competitors?.location, bedrooms: r.competitors?.bedrooms,
+        rate: num(r.rate), source: r.source, captured: r.captured_at.slice(0, 10),
+      })),
+    };
+  },
+
+  async propose_rate_range(supabase, input) {
+    const { reason, ...payload } = z.object({ reason: z.string().min(3).max(1000) }).passthrough().parse(input) as { reason: string } & Json;
+    const r = await proposeAction(supabase, "set_rate_range", payload, reason);
+    return { ...r, message: "Usulan masuk antrean persetujuan. Harga belum berubah sampai disetujui." };
   },
 
   async propose_base_rate_change(supabase, input) {
