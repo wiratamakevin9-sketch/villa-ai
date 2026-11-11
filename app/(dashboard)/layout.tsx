@@ -1,18 +1,20 @@
 import Link from "next/link";
 import { getCurrentOrg } from "@/lib/org";
 
-const NAV: { href: string; label: string; badge?: "alerts" | "approvals" }[] = [
+// staff: true = menu juga terlihat oleh staf (staf tidak melihat data keuangan & AI)
+const NAV: { href: string; label: string; badge?: "alerts" | "approvals"; staff?: boolean }[] = [
   { href: "/", label: "Ringkasan" },
   { href: "/assistant", label: "✦ Asisten AI" },
   { href: "/alerts", label: "Alert", badge: "alerts" },
   { href: "/approvals", label: "Persetujuan", badge: "approvals" },
   { href: "/reports", label: "Laporan" },
-  { href: "/bookings", label: "Booking" },
-  { href: "/bookings/calendar", label: "Kalender" },
+  { href: "/tasks", label: "Operasional", staff: true },
+  { href: "/bookings", label: "Booking", staff: true },
+  { href: "/bookings/calendar", label: "Kalender", staff: true },
   { href: "/pricing", label: "Harga" },
   { href: "/finance", label: "Keuangan" },
-  { href: "/tasks", label: "Operasional" },
-  { href: "/properties", label: "Villa" },
+  { href: "/properties", label: "Villa", staff: true },
+  { href: "/team", label: "Tim" },
   { href: "/settings", label: "Pengaturan" },
 ];
 
@@ -33,7 +35,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           <p className="truncate font-semibold">{org.name}</p>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-2 pb-2 md:flex-col">
-          {NAV.map((item) => (
+          {NAV.filter((item) => role !== "staff" || item.staff).map((item) => (
             <Link
               key={item.href}
               href={item.href}

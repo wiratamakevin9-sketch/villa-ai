@@ -29,3 +29,17 @@ export async function getCurrentOrg() {
   };
   return { supabase, user, org, role: membership.role as Role };
 }
+
+/** Halaman khusus owner/manager: staf diarahkan ke Operasional. */
+export async function requireManager() {
+  const ctx = await getCurrentOrg();
+  if (ctx.role === "staff") redirect("/tasks");
+  return ctx;
+}
+
+/** Halaman khusus owner. */
+export async function requireOwner() {
+  const ctx = await getCurrentOrg();
+  if (ctx.role !== "owner") redirect(ctx.role === "staff" ? "/tasks" : "/");
+  return ctx;
+}

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { getCurrentOrg } from "@/lib/org";
+import { requireManager } from "@/lib/org";
 import { aiEnabled } from "@/lib/agent/claude";
 import { formatIDR, formatPct } from "@/lib/format";
 import { formatDate } from "@/lib/dates";
@@ -35,7 +35,7 @@ function Delta({ now, prev, kind }: { now: number | null; prev: number | null; k
 export default async function ReportPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ error?: string }> }) {
   const { id } = await params;
   const sp = await searchParams;
-  const { supabase, org, role } = await getCurrentOrg();
+  const { supabase, org, role } = await requireManager();
   const { data: r } = await supabase.from("reports").select("*").eq("id", id).maybeSingle();
   if (!r) notFound();
   const m = r.metrics as Metrics;

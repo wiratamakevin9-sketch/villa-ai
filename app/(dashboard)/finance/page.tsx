@@ -1,4 +1,4 @@
-import { getCurrentOrg } from "@/lib/org";
+import { requireManager } from "@/lib/org";
 import { getLookups } from "@/lib/data";
 import { currentMonth, formatDate, isValidMonth, monthRange } from "@/lib/dates";
 import { formatIDR } from "@/lib/format";
@@ -21,7 +21,7 @@ export default async function FinancePage({
   const sp = await searchParams;
   const month = isValidMonth(sp.month) ? sp.month : currentMonth();
   const { start, end } = monthRange(month);
-  const { supabase, role } = await getCurrentOrg();
+  const { supabase, role } = await requireManager();
   const { properties, categories } = await getLookups(supabase);
   const canEdit = role !== "staff";
 

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getCurrentOrg } from "@/lib/org";
+import { requireManager } from "@/lib/org";
 import { Flash } from "@/components/flash";
 import { PropertyFields } from "../property-fields";
 import { updateProperty } from "../actions";
@@ -16,7 +16,7 @@ export default async function EditPropertyPage({
 }) {
   const { id } = await params;
   const { error, message } = await searchParams;
-  const { supabase } = await getCurrentOrg();
+  const { supabase } = await requireManager();
   const [{ data: p }, { channels }] = await Promise.all([
     supabase.from("properties").select("*").eq("id", id).maybeSingle(),
     getLookups(supabase),

@@ -23,8 +23,9 @@ export async function POST(request: Request) {
   if (message.length > 4000) return Response.json({ error: "Pesan terlalu panjang (maks 4.000 karakter)" }, { status: 400 });
 
   const { data: membership } = await supabase
-    .from("memberships").select("org_id, organizations(name)").eq("user_id", user.id).order("created_at").limit(1).maybeSingle();
+    .from("memberships").select("org_id, role, organizations(name)").eq("user_id", user.id).order("created_at").limit(1).maybeSingle();
   if (!membership) return Response.json({ error: "Belum punya bisnis" }, { status: 400 });
+  if (membership.role === "staff") return Response.json({ error: "Asisten AI hanya untuk owner/manager" }, { status: 403 });
   const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).maybeSingle();
 
   // Stream NDJSON: satu event JSON per baris

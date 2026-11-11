@@ -1,10 +1,10 @@
-import { getCurrentOrg } from "@/lib/org";
+import { requireManager } from "@/lib/org";
 import { getLookups } from "@/lib/data";
 import { BookingTabs } from "../tabs";
 import { Importer } from "./importer";
 
 export default async function ImportPage() {
-  const { supabase, role } = await getCurrentOrg();
+  const { supabase, role } = await requireManager();
   const { properties, channels } = await getLookups(supabase);
 
   return (

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentOrg } from "@/lib/org";
+import { requireManager } from "@/lib/org";
 import { formatDate } from "@/lib/dates";
 import { BookingTabs } from "../tabs";
 import { setEventStatus } from "./actions";
@@ -11,7 +11,7 @@ type Ev = {
 };
 
 export default async function InboxPage() {
-  const { supabase, role } = await getCurrentOrg();
+  const { supabase, role } = await requireManager();
   const today = new Date().toISOString().slice(0, 10);
   const [{ data: pending }, { data: removed }] = await Promise.all([
     supabase.from("ical_events")

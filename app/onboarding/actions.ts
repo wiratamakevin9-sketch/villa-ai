@@ -16,3 +16,10 @@ export async function createOrganization(formData: FormData) {
   }
   redirect("/");
 }
+
+export async function acceptInvite(inviteId: string) {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc("accept_invite", { p_invite: inviteId });
+  if (error) redirect(`/onboarding?error=${encodeURIComponent(error.message)}`);
+  redirect("/tasks");
+}

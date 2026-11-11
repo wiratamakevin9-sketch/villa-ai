@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentOrg } from "@/lib/org";
+import { requireManager } from "@/lib/org";
 import { formatIDR, formatMonth, formatPct } from "@/lib/format";
 import { TrendCharts, type TrendPoint } from "@/components/trend-charts";
 
@@ -49,7 +49,7 @@ export default async function OverviewPage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const { error } = await searchParams;
-  const { supabase } = await getCurrentOrg();
+  const { supabase } = await requireManager();
   const thisMonth = monthStart(0);
   const lastMonth = monthStart(-1);
 

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentOrg } from "@/lib/org";
+import { requireManager } from "@/lib/org";
 import { formatIDR, formatPct } from "@/lib/format";
 import { formatDate } from "@/lib/dates";
 import { Flash } from "@/components/flash";
@@ -10,7 +10,7 @@ type Report = { id: string; period_type: string; period_start: string; period_en
 
 export default async function ReportsPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const sp = await searchParams;
-  const { supabase } = await getCurrentOrg();
+  const { supabase } = await requireManager();
   const { data } = await supabase.from("reports")
     .select("id, period_type, period_start, period_end, ai_summary, metrics")
     .is("property_id", null).order("period_start", { ascending: false }).limit(60);

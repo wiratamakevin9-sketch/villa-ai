@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentOrg } from "@/lib/org";
+import { requireManager } from "@/lib/org";
 import { getLookups } from "@/lib/data";
 import { currentMonth, isValidMonth, monthRange } from "@/lib/dates";
 import { formatIDR } from "@/lib/format";
@@ -42,7 +42,7 @@ export default async function PricingPage({
   searchParams: Promise<{ property?: string; month?: string; error?: string; message?: string }>;
 }) {
   const sp = await searchParams;
-  const { supabase, role } = await getCurrentOrg();
+  const { supabase, role } = await requireManager();
   const { properties } = await getLookups(supabase);
   if (properties.length === 0) return <p className="text-sm text-stone-500">Tambahkan villa terlebih dahulu.</p>;
   const property = properties.find((p) => p.id === sp.property)?.id ?? properties[0].id;

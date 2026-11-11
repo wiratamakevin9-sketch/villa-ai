@@ -1,4 +1,4 @@
-import { getCurrentOrg } from "@/lib/org";
+import { requireManager } from "@/lib/org";
 import { addChannel, clearDemo, loadDemo, updateChannel } from "./actions";
 import { IntegrationsSection } from "./integrations-section";
 
@@ -8,7 +8,7 @@ export default async function SettingsPage({
   searchParams: Promise<{ error?: string; message?: string }>;
 }) {
   const { error, message } = await searchParams;
-  const { supabase, org, role } = await getCurrentOrg();
+  const { supabase, org, role } = await requireManager();
   const { data: channels } = await supabase
     .from("channels")
     .select("id, name, type, commission_pct, active")

@@ -1,5 +1,5 @@
 import ReactMarkdown from "react-markdown";
-import { getCurrentOrg } from "@/lib/org";
+import { requireManager } from "@/lib/org";
 import { getLookups } from "@/lib/data";
 import { aiEnabled } from "@/lib/agent/claude";
 import { formatIDR } from "@/lib/format";
@@ -18,7 +18,7 @@ export default async function CompetitorsPage({
   searchParams: Promise<{ property?: string; error?: string; message?: string }>;
 }) {
   const sp = await searchParams;
-  const { supabase, role } = await getCurrentOrg();
+  const { supabase, role } = await requireManager();
   const { properties } = await getLookups(supabase);
   if (properties.length === 0) return <p className="text-sm text-stone-500">Tambahkan villa terlebih dahulu.</p>;
   const property = properties.find((p) => p.id === sp.property)?.id ?? properties[0].id;

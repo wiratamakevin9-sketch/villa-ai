@@ -10,6 +10,8 @@ export async function GET(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return new Response("Harus login", { status: 401 });
+  const { data: m } = await supabase.from("memberships").select("role").eq("user_id", user.id).order("created_at").limit(1).maybeSingle();
+  if (!m || m.role === "staff") return new Response("Hanya owner/manager", { status: 403 });
 
   let rows: Record<string, unknown>[] = [];
   if (kind === "bookings") {

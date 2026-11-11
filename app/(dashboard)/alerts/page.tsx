@@ -1,7 +1,7 @@
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { getCurrentOrg } from "@/lib/org";
+import { requireManager } from "@/lib/org";
 import { aiEnabled } from "@/lib/agent/claude";
 import { Flash } from "@/components/flash";
 import { SeverityBadge } from "@/components/severity";
@@ -29,7 +29,7 @@ export default async function AlertsPage({
 }) {
   const sp = await searchParams;
   const showAll = sp.show === "all";
-  const { supabase, role } = await getCurrentOrg();
+  const { supabase, role } = await requireManager();
   let q = supabase.from("alerts")
     .select("id, type, severity, title, status, created_at, data, ai_explanation, properties(name)")
     .order("created_at", { ascending: false }).limit(100);

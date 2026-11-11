@@ -1,4 +1,4 @@
-import { getCurrentOrg } from "@/lib/org";
+import { requireManager } from "@/lib/org";
 import { formatIDR } from "@/lib/format";
 import { ACTION_LABELS } from "@/lib/approvals";
 import { Flash } from "@/components/flash";
@@ -44,7 +44,7 @@ function Detail({ a }: { a: Approval }) {
 
 export default async function ApprovalsPage({ searchParams }: { searchParams: Promise<{ error?: string; message?: string }> }) {
   const sp = await searchParams;
-  const { supabase, role } = await getCurrentOrg();
+  const { supabase, role } = await requireManager();
   const { data } = await supabase.from("approvals").select("*").order("proposed_at", { ascending: false }).limit(50);
   const all = (data ?? []) as Approval[];
   const pending = all.filter((a) => a.status === "pending");

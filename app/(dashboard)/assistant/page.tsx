@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentOrg } from "@/lib/org";
+import { requireManager } from "@/lib/org";
 import { Chat, type ChatTurn } from "./chat";
 import { deleteConversation } from "./actions";
 import { TOOL_LABELS } from "@/lib/agent/tools";
@@ -31,7 +31,7 @@ function toTurns(rows: { role: "user" | "assistant"; content: Block[] }[]): Chat
 
 export default async function AssistantPage({ searchParams }: { searchParams: Promise<{ c?: string }> }) {
   const { c } = await searchParams;
-  const { supabase, user } = await getCurrentOrg();
+  const { supabase, user } = await requireManager();
 
   const [{ data: conversations }, { data: rows }] = await Promise.all([
     supabase.from("conversations").select("id, title, created_at").eq("user_id", user.id)

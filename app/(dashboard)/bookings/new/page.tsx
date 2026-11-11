@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getCurrentOrg } from "@/lib/org";
+import { requireManager } from "@/lib/org";
 import { getLookups } from "@/lib/data";
 import { Flash } from "@/components/flash";
 import { BookingForm } from "../booking-form";
@@ -11,7 +11,7 @@ export default async function NewBookingPage({
   searchParams: Promise<{ error?: string; property?: string; check_in?: string; check_out?: string; channel?: string; ical?: string }>;
 }) {
   const { error, property, check_in, check_out, channel, ical } = await searchParams;
-  const { supabase } = await getCurrentOrg();
+  const { supabase } = await requireManager();
   const { properties, channels } = await getLookups(supabase);
 
   return (
