@@ -215,6 +215,18 @@ TOOL_DEFINITIONS.push({
   },
 });
 
+// --- Fase 7A: forecast ---
+TOOL_DEFINITIONS.push({
+  name: "get_forecast",
+  description:
+    "Forecast pendapatan kamar, okupansi, dan laba per villa untuk 1–6 bulan ke depan: malam & pendapatan yang sudah dipesan (on-the-books), perkiraan malam tambahan dari pola pemesanan historis, ADR, pengeluaran rata-rata, laba, dan tingkat keyakinan (tinggi/sedang/rendah).",
+  input_schema: {
+    type: "object",
+    properties: { months: { type: "integer", description: "Jumlah bulan ke depan termasuk bulan ini (1–6, default 3)" } },
+    additionalProperties: false,
+  },
+});
+
 // Tool web search bawaan Claude (riset kompetitor, harga pasar, tren pariwisata)
 export const WEB_SEARCH_TOOL: Anthropic.Beta.Messages.BetaToolUnion = {
   type: "web_search_20260209",
@@ -241,6 +253,7 @@ export const TOOL_LABELS: Record<string, string> = {
   get_competitor_rates: "Membaca harga kompetitor",
   propose_rate_range: "Mengusulkan harga per tanggal",
   list_tasks: "Membaca tugas operasional",
+  get_forecast: "Menghitung forecast",
 };
 
 // ---------------------------------------------------------------------
@@ -511,6 +524,17 @@ const executors: Record<string, Executor> = {
     const { reason, ...payload } = z.object({ reason: z.string().min(3).max(1000) }).passthrough().parse(input) as { reason: string } & Json;
     const r = await proposeAction(supabase, "set_rate_range", payload, reason);
     return { ...r, message: "Usulan masuk antrean persetujuan. Harga belum berubah sampai disetujui." };
+  },
+
+  async get_forecast(supabase, input) {
+    const a = z.object({ months: z.number().int().min(1).max(6).optional() }).strict().parse(input ?? {});
+    const { data: m } = await supabase.from("memberships").select("org_id").limit(1).single();
+    const { data, error } = await supabase.rpc("forecast_revenue", { p_org: m?.org_id, p_months: a.months ?? 3 });
+    fail(error);
+    return {
+      method: "OTB + perkiraan tambahan = okupansi historis × malam tersedia × (1 − porsi yang biasanya sudah dipesan) × pace; dibatasi 115% permintaan historis. Pendapatan tambahan memakai harga kalender.",
+      rows: data,
+    };
   },
 
   async list_tasks(supabase, input) {

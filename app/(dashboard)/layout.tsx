@@ -4,6 +4,7 @@ import { getCurrentOrg } from "@/lib/org";
 // staff: true = menu juga terlihat oleh staf (staf tidak melihat data keuangan & AI)
 const NAV: { href: string; label: string; badge?: "alerts" | "approvals"; staff?: boolean }[] = [
   { href: "/", label: "Ringkasan" },
+  { href: "/portfolio", label: "Portofolio" },
   { href: "/assistant", label: "✦ Asisten AI" },
   { href: "/alerts", label: "Alert", badge: "alerts" },
   { href: "/approvals", label: "Persetujuan", badge: "approvals" },

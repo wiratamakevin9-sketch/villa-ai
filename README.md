@@ -7,7 +7,7 @@ booking, operasional, dan laporan keuangan untuk banyak properti sekaligus.
 
 ## Mulai
 
-Panduan per fase: [Fase 0](docs/PANDUAN-FASE-0.md) · [Fase 1](docs/PANDUAN-FASE-1.md) · [Fase 2: Asisten AI](docs/PANDUAN-FASE-2.md) · [Fase 3: Proaktif](docs/PANDUAN-FASE-3.md) · [Fase 4: Integrasi](docs/PANDUAN-FASE-4.md) · [Fase 5: Harga](docs/PANDUAN-FASE-5.md) · [Fase 6: Operasional & Tim](docs/PANDUAN-FASE-6.md) · [Online-kan ke Vercel](docs/PANDUAN-DEPLOY-VERCEL.md)
+Panduan per fase: [Fase 0](docs/PANDUAN-FASE-0.md) · [Fase 1](docs/PANDUAN-FASE-1.md) · [Fase 2: Asisten AI](docs/PANDUAN-FASE-2.md) · [Fase 3: Proaktif](docs/PANDUAN-FASE-3.md) · [Fase 4: Integrasi](docs/PANDUAN-FASE-4.md) · [Fase 5: Harga](docs/PANDUAN-FASE-5.md) · [Fase 6: Operasional & Tim](docs/PANDUAN-FASE-6.md) · [Fase 7: Advanced](docs/PANDUAN-FASE-7.md) · [Online-kan ke Vercel](docs/PANDUAN-DEPLOY-VERCEL.md)
 
 Ringkasnya:
 
@@ -23,7 +23,7 @@ npm run dev
 
 ```
 app/
-  (dashboard)/        Ringkasan, Asisten AI, Alert, Persetujuan, Laporan, Booking,
+  (dashboard)/        Ringkasan, Portofolio, Asisten AI, Alert, Persetujuan, Laporan, Booking,
                       Kalender, Harga, Keuangan, Operasional, Villa, Tim, Pengaturan
   api/agent/          Endpoint streaming Asisten AI
   api/export/         Unduh CSV (login)
