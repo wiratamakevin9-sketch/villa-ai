@@ -52,10 +52,11 @@ export default async function AssistantPage({ searchParams }: { searchParams: Pr
         </div>
         {!aiReady && (
           <p className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
-            Asisten belum aktif: isi <code>ANTHROPIC_API_KEY</code> di <code>.env.local</code> lalu jalankan ulang aplikasi.
+            Asisten belum aktif: tambahkan <code>ANTHROPIC_API_KEY</code> di Vercel → Settings → Environment Variables
+            (atau di <code>.env.local</code> saat dijalankan lokal), lalu Redeploy.
           </p>
         )}
-        <Chat key={c ?? "new"} conversationId={c ?? null} initialTurns={turns} />
+        <Chat key={c ?? "new"} conversationId={c ?? null} initialTurns={turns} disabled={!aiReady} />
         <p className="mt-2 text-xs text-stone-400">
           AI bisa keliru. Angka diambil langsung dari database, tetapi periksa kembali sebelum mengambil keputusan penting.
         </p>

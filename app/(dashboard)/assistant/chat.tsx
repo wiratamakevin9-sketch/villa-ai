@@ -16,7 +16,7 @@ const SUGGESTIONS = [
   "Riset harga sewa villa 3 kamar di Canggu untuk Desember, bandingkan dengan harga saya.",
 ];
 
-export function Chat({ conversationId, initialTurns }: { conversationId: string | null; initialTurns: ChatTurn[] }) {
+export function Chat({ conversationId, initialTurns, disabled = false }: { conversationId: string | null; initialTurns: ChatTurn[]; disabled?: boolean }) {
   const router = useRouter();
   const [turns, setTurns] = useState<ChatTurn[]>(initialTurns);
   const [input, setInput] = useState("");
@@ -34,7 +34,7 @@ export function Chat({ conversationId, initialTurns }: { conversationId: string 
 
   async function send(text: string) {
     const message = text.trim();
-    if (!message || busy) return;
+    if (!message || busy || disabled) return;
     setError("");
     setInput("");
     setBusy(true);
@@ -82,6 +82,8 @@ export function Chat({ conversationId, initialTurns }: { conversationId: string 
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
+      // hapus kotak jawaban kosong jika gagal sebelum ada teks
+      setTurns((prev) => (prev.length && prev[prev.length - 1].role === "assistant" && !prev[prev.length - 1].text && !prev[prev.length - 1].tools.length ? prev.slice(0, -1) : prev));
     } finally {
       setBusy(false);
       setStatus("");
@@ -143,10 +145,10 @@ export function Chat({ conversationId, initialTurns }: { conversationId: string 
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(input); } }}
-          disabled={busy}
+          disabled={busy || disabled}
           aria-label="Pertanyaan untuk asisten"
         />
-        <button className="btn" disabled={busy || !input.trim()}>{busy ? "…" : "Kirim"}</button>
+        <button className="btn" disabled={busy || disabled || !input.trim()}>{busy ? "…" : "Kirim"}</button>
       </form>
     </div>
   );
