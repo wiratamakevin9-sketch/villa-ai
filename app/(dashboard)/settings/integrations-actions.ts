@@ -29,6 +29,7 @@ export async function saveWhatsApp(formData: FormData) {
     wa_recipients: recipients,
     notify_daily_alerts: formData.get("notify_daily_alerts") === "on",
     notify_reports: formData.get("notify_reports") === "on",
+    notify_staff_tasks: formData.get("notify_staff_tasks") === "on",
     app_url: String(formData.get("app_url") || "").trim() || null,
     updated_at: new Date().toISOString(),
   });

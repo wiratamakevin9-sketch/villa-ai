@@ -201,6 +201,20 @@ TOOL_DEFINITIONS.push(
   },
 );
 
+// --- Fase 6: operasional ---
+TOOL_DEFINITIONS.push({
+  name: "list_tasks",
+  description: "Daftar tugas operasional (cleaning, maintenance, inspeksi, pembelian): yang terbuka beserta tenggat, prioritas, petugas, dan apakah terlambat; atau yang selesai dalam 30 hari terakhir beserta biayanya.",
+  input_schema: {
+    type: "object",
+    properties: {
+      status: { type: "string", enum: ["open", "done"], description: "open (default) atau done" },
+      property_id: { type: "string", description: "Opsional: ID villa" },
+    },
+    additionalProperties: false,
+  },
+});
+
 // Tool web search bawaan Claude (riset kompetitor, harga pasar, tren pariwisata)
 export const WEB_SEARCH_TOOL: Anthropic.Beta.Messages.BetaToolUnion = {
   type: "web_search_20260209",
@@ -226,6 +240,7 @@ export const TOOL_LABELS: Record<string, string> = {
   get_rate_calendar: "Membaca kalender harga",
   get_competitor_rates: "Membaca harga kompetitor",
   propose_rate_range: "Mengusulkan harga per tanggal",
+  list_tasks: "Membaca tugas operasional",
 };
 
 // ---------------------------------------------------------------------
@@ -496,6 +511,29 @@ const executors: Record<string, Executor> = {
     const { reason, ...payload } = z.object({ reason: z.string().min(3).max(1000) }).passthrough().parse(input) as { reason: string } & Json;
     const r = await proposeAction(supabase, "set_rate_range", payload, reason);
     return { ...r, message: "Usulan masuk antrean persetujuan. Harga belum berubah sampai disetujui." };
+  },
+
+  async list_tasks(supabase, input) {
+    const a = z.object({ status: z.enum(["open", "done"]).optional(), property_id: uuid.optional() }).strict().parse(input ?? {});
+    const done = a.status === "done";
+    let q = supabase.from("tasks")
+      .select("type, title, status, priority, due_at, completed_at, cost, auto_key, properties(name), staff:assigned_to(name)")
+      .in("status", done ? ["done"] : ["todo", "in_progress"]).order("due_at", { ascending: true }).limit(80);
+    if (done) q = q.gte("completed_at", new Date(Date.now() - 30 * 86_400_000).toISOString());
+    if (a.property_id) q = q.eq("property_id", a.property_id);
+    const { data, error } = await q;
+    fail(error);
+    type T = { type: string; title: string; status: string; priority: string; due_at: string | null; completed_at: string | null; cost: number | null; auto_key: string | null; properties: { name: string } | null; staff: { name: string } | null };
+    const now = Date.now();
+    return {
+      count: data?.length ?? 0,
+      tasks: ((data ?? []) as unknown as T[]).map((t) => ({
+        property: t.properties?.name, type: t.type, title: t.title, status: t.status, priority: t.priority,
+        due: t.due_at?.slice(0, 16), overdue: !done && !!t.due_at && Date.parse(t.due_at) < now,
+        assigned_to: t.staff?.name ?? null, automatic: !!t.auto_key, cost: t.cost === null ? undefined : num(t.cost),
+        completed: t.completed_at?.slice(0, 10),
+      })),
+    };
   },
 
   async propose_base_rate_change(supabase, input) {

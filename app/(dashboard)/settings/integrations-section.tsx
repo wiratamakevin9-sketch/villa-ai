@@ -4,7 +4,7 @@ import { createSheetsLink, revokeSheetsLink, saveWhatsApp, testWhatsApp } from "
 
 type Settings = {
   wa_enabled: boolean; wa_phone_number_id: string | null; wa_template: string; wa_language: string; wa_api_version: string;
-  wa_recipients: string[]; notify_daily_alerts: boolean; notify_reports: boolean; app_url: string | null;
+  wa_recipients: string[]; notify_daily_alerts: boolean; notify_reports: boolean; notify_staff_tasks: boolean; app_url: string | null;
 };
 type Log = { recipient: string; kind: string; http_status: number; response: string | null; sent_at: string };
 
@@ -60,6 +60,7 @@ export async function IntegrationsSection({ supabase, orgId }: { supabase: Supab
           </div>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="notify_daily_alerts" defaultChecked={st.notify_daily_alerts ?? true} /> Alert penting harian</label>
           <label className="flex items-center gap-2 text-sm"><input type="checkbox" name="notify_reports" defaultChecked={st.notify_reports ?? true} /> Laporan mingguan &amp; bulanan</label>
+          <label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" name="notify_staff_tasks" defaultChecked={st.notify_staff_tasks ?? false} /> Kirim jadwal tugas harian ke WhatsApp masing-masing staf (nomor diatur di menu Tim)</label>
           <div className="flex gap-2 sm:col-span-2"><button className="btn">Simpan</button></div>
         </form>
         {st.wa_enabled && <form action={testWhatsApp}><button className="btn-secondary">Kirim pesan tes</button></form>}

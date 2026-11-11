@@ -5,6 +5,7 @@ import { Flash } from "@/components/flash";
 import { PropertyFields } from "../property-fields";
 import { updateProperty } from "../actions";
 import { IcalSection } from "../ical-section";
+import { AssetSection } from "../asset-section";
 import { getLookups } from "@/lib/data";
 
 export default async function EditPropertyPage({
@@ -34,6 +35,7 @@ export default async function EditPropertyPage({
           <div className="sm:col-span-2"><button className="btn">Simpan perubahan</button></div>
         </form>
       </div>
+      <AssetSection supabase={supabase} propertyId={id} />
       <IcalSection supabase={supabase} propertyId={id} channels={channels} />
     </div>
   );
